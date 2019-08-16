@@ -1,0 +1,9 @@
+.idea
+__pycache__/
+venv
+
+log
+keys
+certificate
+nic_token.json
+p_settings.py

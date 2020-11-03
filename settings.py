@@ -19,10 +19,13 @@ LOG_HTTP_SERVER_PORT = '***secret***'
 LOG_HTTP_SERVER_PORT_GUI = '***secret***'
 LOG_HTTP_SERVER_PATH = 'letsencrypt-certificate'
 
-TELEGRAM = {
+TELEGRAM_SOCKS5 = {
     'proxy_username': '***secret***',
     'proxy_pass': '***secret***',
     'proxy_hostport': '***secret***',
+}
+
+TELEGRAM = {
     'token': '***secret***',
     'recipient': '***secret***',
 }

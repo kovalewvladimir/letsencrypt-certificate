@@ -12,11 +12,6 @@ from updater import update_aa_txt, update_cer_by_ssh
 LOG_FOLDER = '/var/log/letsencrypt-certificate'
 # Для тестов
 # LOG_FOLDER = os.path.join(os.path.dirname(__file__), 'log')
-LOG_HTTP_SERVER_ENABLE = True
-LOG_HTTP_SERVER_IP = '10.1.13.16'
-LOG_HTTP_SERVER_PORT = '9001'
-LOG_HTTP_SERVER_PORT_GUI = '9001'
-LOG_HTTP_SERVER_PATH = 'letsencrypt-certificate'
 
 LOG_HTTP_SERVER_ENABLE = True
 LOG_HTTP_SERVER_IP = '***secret***'

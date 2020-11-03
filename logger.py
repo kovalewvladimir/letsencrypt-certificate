@@ -66,9 +66,8 @@ if TELEGRAM_SOCKS5_ENABLE:
             TELEGRAM_SOCKS5['proxy_hostport']
         )
     }
-    bot = telebot.TeleBot(TELEGRAM['token'])
-else:
-    bot = telebot.TeleBot(TELEGRAM['token'])
+
+bot = telebot.TeleBot(TELEGRAM['token'])
 
 
 def send_message_telegram(msg, parse_mode='HTML'):

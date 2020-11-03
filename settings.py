@@ -4,7 +4,7 @@
 import os
 from datetime import datetime
 
-from updater import update_aa_txt, update_cer_by_ssh
+from updater import update_aa_txt, update_cer_by_ssh, update_cer_local
 
 # ------ Настройки для лога ------
 
@@ -19,10 +19,13 @@ LOG_HTTP_SERVER_PORT = '***secret***'
 LOG_HTTP_SERVER_PORT_GUI = '***secret***'
 LOG_HTTP_SERVER_PATH = 'letsencrypt-certificate'
 
-TELEGRAM = {
+TELEGRAM_SOCKS5_ENABLE = False
+TELEGRAM_SOCKS5 = {
     'proxy_username': '***secret***',
     'proxy_pass': '***secret***',
     'proxy_hostport': '***secret***',
+}
+TELEGRAM = {
     'token': '***secret***',
     'recipient': '***secret***',
 }
@@ -46,9 +49,9 @@ LOG_HTTP_SERVER_PATH = os.path.join(LOG_HTTP_SERVER_PATH, _log_file_name)
 # Про протокол ACME можно почитать тут: https://tools.ietf.org/html/rfc8555
 # https://letsencrypt.org/docs/acme-protocol-updates/
 # Для тестов
-# DIRECTORY_URL = 'https://acme-staging-v02.api.letsencrypt.org/directory'
+DIRECTORY_URL = 'https://acme-staging-v02.api.letsencrypt.org/directory'
 # Для продакшена
-DIRECTORY_URL = 'https://acme-v02.api.letsencrypt.org/directory'
+# DIRECTORY_URL = 'https://acme-v02.api.letsencrypt.org/directory'
 
 # Хз зачем, но работает.
 # Скорей всего это описано в спецификации протокола ACME
@@ -77,23 +80,18 @@ EMAIL = '***secret***'
 # Словарь с настройками
 # TODO: Описать
 CERTIFICATE = {    
-    'telebot.aliter.spb.ru': {
+    '***secret***': {
         'email': EMAIL,
-        'domain': ['telebot.aliter.spb.ru'],
-        'port': [8443],
+        'domain': ['***secret***'],
+        'port': [443],
         'update_txt': update_aa_txt,
 
-        'update_cert': update_cer_by_ssh,
-        'ssh_host': '***secret***',
-        'ssh_username': '***secret***',
-        'ssh_pkey_path': os.path.join(os.path.dirname(__file__), 'keys', '***secret***'),
-        'ssh_private_path': '***secret***',
-        'ssh_fullchain_path': '***secret***',
-        'ssh_commands': ['sudo systemctl restart redir.service'],
+        'update_cert': update_cer_local,
+        'local_commands': ['sudo systemctl restart apache2'],
     },
-    'aliter.spb.ru': {
+    '***secret***': {
         'email': EMAIL,
-        'domain': ['aliter.spb.ru', 'www.aliter.spb.ru'],
+        'domain': ['***secret***', '***secret***'],
         'port': [443],
         'update_txt': update_aa_txt,
 
@@ -105,9 +103,9 @@ CERTIFICATE = {
         'ssh_fullchain_path': '***secret***',
         'ssh_commands': ['killall nginx', 'nginx'],
     },
-    'mail.aliter.spb.ru': {
+    '***secret***': {
         'email': EMAIL,
-        'domain': ['mail.aliter.spb.ru'],
+        'domain': ['***secret***'],
         'port': [465, 993],
         'update_txt': update_aa_txt,
 

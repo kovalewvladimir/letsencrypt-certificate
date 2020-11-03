@@ -3,12 +3,12 @@ import sys
 
 import telebot
 
-from argparser import args
 from settings import (LOG_FILE,
                       LOG_HTTP_SERVER_ENABLE,
                       LOG_HTTP_SERVER_PATH,
                       LOG_HTTP_SERVER_IP,
                       LOG_HTTP_SERVER_PORT,
+                      TELEGRAM_SOCKS5_ENABLE,
                       TELEGRAM_SOCKS5,
                       TELEGRAM
                       )
@@ -58,7 +58,7 @@ logging.config.dictConfig(log_config)
 logger = logging.getLogger('default')
 
 # Лог в телеграмм
-if args.socks5 == "yes":
+if TELEGRAM_SOCKS5_ENABLE:
     telebot.apihelper.proxy = {
         'https': 'socks5://%s:%s@%s' % (
             TELEGRAM_SOCKS5['proxy_username'],

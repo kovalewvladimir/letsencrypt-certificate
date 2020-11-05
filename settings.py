@@ -19,10 +19,13 @@ LOG_HTTP_SERVER_PORT = '***secret***'
 LOG_HTTP_SERVER_PORT_GUI = '***secret***'
 LOG_HTTP_SERVER_PATH = 'letsencrypt-certificate'
 
-TELEGRAM = {
+TELEGRAM_SOCKS5_ENABLE = True
+TELEGRAM_SOCKS5 = {
     'proxy_username': '***secret***',
     'proxy_pass': '***secret***',
     'proxy_hostport': '***secret***',
+}
+TELEGRAM = {
     'token': '***secret***',
     'recipient': '***secret***',
 }
@@ -77,9 +80,9 @@ EMAIL = '***secret***'
 # Словарь с настройками
 # TODO: Описать
 CERTIFICATE = {    
-    'telebot.aliter.spb.ru': {
+    '***secret***': {
         'email': EMAIL,
-        'domain': ['telebot.aliter.spb.ru'],
+        'domain': ['***secret***'],
         'port': [8443],
         'update_txt': update_aa_txt,
 
@@ -91,9 +94,9 @@ CERTIFICATE = {
         'ssh_fullchain_path': '***secret***',
         'ssh_commands': ['sudo systemctl restart redir.service'],
     },
-    'aliter.spb.ru': {
+    '***secret***': {
         'email': EMAIL,
-        'domain': ['aliter.spb.ru', 'www.aliter.spb.ru'],
+        'domain': ['***secret***', '***secret***'],
         'port': [443],
         'update_txt': update_aa_txt,
 
@@ -105,9 +108,9 @@ CERTIFICATE = {
         'ssh_fullchain_path': '***secret***',
         'ssh_commands': ['killall nginx', 'nginx'],
     },
-    'mail.aliter.spb.ru': {
+    '***secret***': {
         'email': EMAIL,
-        'domain': ['mail.aliter.spb.ru'],
+        'domain': ['***secret***'],
         'port': [465, 993],
         'update_txt': update_aa_txt,
 

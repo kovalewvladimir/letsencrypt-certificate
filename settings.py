@@ -82,7 +82,7 @@ EMAIL = '***secret***'
 CERTIFICATE = {    
     'telebot.aliter.spb.ru': {
         'email': EMAIL,
-        'domain': ['telebot.aliter.spb.ru'],
+        'domain': ['***secret***'],
         'port': [8443],
         'update_txt': update_aa_txt,
 
@@ -96,7 +96,7 @@ CERTIFICATE = {
     },
     'aliter.spb.ru': {
         'email': EMAIL,
-        'domain': ['aliter.spb.ru', 'www.aliter.spb.ru'],
+        'domain': ['***secret***', '***secret***'],
         'port': [443],
         'update_txt': update_aa_txt,
 
@@ -110,7 +110,7 @@ CERTIFICATE = {
     },
     'mail.aliter.spb.ru': {
         'email': EMAIL,
-        'domain': ['mail.aliter.spb.ru'],
+        'domain': ['***secret***'],
         'port': [465, 993],
         'update_txt': update_aa_txt,
 

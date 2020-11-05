@@ -80,7 +80,7 @@ EMAIL = '***secret***'
 # Словарь с настройками
 # TODO: Описать
 CERTIFICATE = {    
-    'telebot.aliter.spb.ru': {
+    '***secret***': {
         'email': EMAIL,
         'domain': ['***secret***'],
         'port': [8443],
@@ -94,7 +94,7 @@ CERTIFICATE = {
         'ssh_fullchain_path': '***secret***',
         'ssh_commands': ['sudo systemctl restart redir.service'],
     },
-    'aliter.spb.ru': {
+    '***secret***': {
         'email': EMAIL,
         'domain': ['***secret***', '***secret***'],
         'port': [443],
@@ -108,7 +108,7 @@ CERTIFICATE = {
         'ssh_fullchain_path': '***secret***',
         'ssh_commands': ['killall nginx', 'nginx'],
     },
-    'mail.aliter.spb.ru': {
+    '***secret***': {
         'email': EMAIL,
         'domain': ['***secret***'],
         'port': [465, 993],

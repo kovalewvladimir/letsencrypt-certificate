@@ -1,8 +1,9 @@
 import os
+import shutil
 
 import paramiko
 from scp import SCPClient
-
+from subprocess import Popen, PIPE
 import lib.nic_api as nic_api
 
 
@@ -54,7 +55,7 @@ def update_aa_txt(domain, validation, ttl=1):
 
 
 def update_cer_by_ssh(settings):
-    """Обновление сертификата на сервере"""
+    """Обновление сертификата на удаленном сервере"""
     # В этом импорте нет ошибки
     # Если поместить его вверх, будет ошибка циклического импорта
     from logger import logger
@@ -88,3 +89,32 @@ def update_cer_by_ssh(settings):
                     logger.info('%s: ssh-stdout: %s' % (ssh_host, stdout))
                 if stderr:
                     logger.error('%s: ssh-stderr: %s' % (ssh_host, stderr))
+
+
+def update_cer_local(settings):
+    """Обновление сертификата на локальном сервере"""
+    # В этом импорте нет ошибки
+    # Если поместить его вверх, будет ошибка циклического импорта
+    from logger import logger
+
+    local_host = os.uname()[1]
+    local_commands = settings.get('local_commands')
+    private_path = settings.get('private_path')
+    fullchain_path = settings.get('fullchain_path')
+    local_private_path = settings.get('local_private_path')
+    local_fullchain_path = settings.get('local_fullchain_path')
+
+    logger.info('Обновляю сертификат на %s' % local_host)
+    shutil.copyfile(private_path, local_private_path)
+    shutil.copyfile(fullchain_path, local_fullchain_path)
+
+    for command in local_commands:
+        logger.info('%s: local_command: %s' % (local_host, command))
+        process = Popen(command, stdout=PIPE, stderr=PIPE, shell=True)
+        stdout, stderr = process.communicate()
+        stdout = stdout.decode('utf-8')
+        stderr = stderr.decode('utf-8')
+        if stdout:
+            logger.info('%s: local-stdout: %s' % (local_host, stdout))
+        if stderr:
+            logger.error('%s: local-stderr: %s' % (local_host, stderr))

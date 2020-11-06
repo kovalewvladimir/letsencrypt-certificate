@@ -4,7 +4,7 @@
 import os
 from datetime import datetime
 
-from updater import update_aa_txt, update_cer_by_ssh
+from updater import update_aa_txt, update_cer_by_ssh, update_cer_local
 
 # ------ Настройки для лога ------
 
@@ -19,7 +19,7 @@ LOG_HTTP_SERVER_PORT = '***secret***'
 LOG_HTTP_SERVER_PORT_GUI = '***secret***'
 LOG_HTTP_SERVER_PATH = 'letsencrypt-certificate'
 
-TELEGRAM_SOCKS5_ENABLE = True
+TELEGRAM_SOCKS5_ENABLE = False
 TELEGRAM_SOCKS5 = {
     'proxy_username': '***secret***',
     'proxy_pass': '***secret***',
@@ -49,9 +49,9 @@ LOG_HTTP_SERVER_PATH = os.path.join(LOG_HTTP_SERVER_PATH, _log_file_name)
 # Про протокол ACME можно почитать тут: https://tools.ietf.org/html/rfc8555
 # https://letsencrypt.org/docs/acme-protocol-updates/
 # Для тестов
-# DIRECTORY_URL = 'https://acme-staging-v02.api.letsencrypt.org/directory'
+DIRECTORY_URL = 'https://acme-staging-v02.api.letsencrypt.org/directory'
 # Для продакшена
-DIRECTORY_URL = 'https://acme-v02.api.letsencrypt.org/directory'
+# DIRECTORY_URL = 'https://acme-v02.api.letsencrypt.org/directory'
 
 # Хз зачем, но работает.
 # Скорей всего это описано в спецификации протокола ACME
@@ -83,16 +83,11 @@ CERTIFICATE = {
     '***secret***': {
         'email': EMAIL,
         'domain': ['***secret***'],
-        'port': [8443],
+        'port': [443],
         'update_txt': update_aa_txt,
 
-        'update_cert': update_cer_by_ssh,
-        'ssh_host': '***secret***',
-        'ssh_username': '***secret***',
-        'ssh_pkey_path': os.path.join(os.path.dirname(__file__), 'keys', '***secret***'),
-        'ssh_private_path': '***secret***',
-        'ssh_fullchain_path': '***secret***',
-        'ssh_commands': ['sudo systemctl restart redir.service'],
+        'update_cert': update_cer_local,
+        'local_commands': ['sudo systemctl restart apache2'],
     },
     '***secret***': {
         'email': EMAIL,

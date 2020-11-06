@@ -1,4 +1,5 @@
 import os
+import shutil
 
 import paramiko
 from scp import SCPClient
@@ -98,8 +99,14 @@ def update_cer_local(settings):
 
     local_host = os.uname()[1]
     local_commands = settings.get('local_commands')
+    private_path = settings.get('private_path')
+    fullchain_path = settings.get('fullchain_path')
+    local_private_path = settings.get('local_private_path')
+    local_fullchain_path = settings.get('local_fullchain_path')
 
     logger.info('Обновляю сертификат на %s' % local_host)
+    shutil.copyfile(private_path, local_private_path)
+    shutil.copyfile(fullchain_path, local_fullchain_path)
 
     for command in local_commands:
         logger.info('%s: local_command: %s' % (local_host, command))

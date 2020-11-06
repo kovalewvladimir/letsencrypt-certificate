@@ -49,9 +49,9 @@ LOG_HTTP_SERVER_PATH = os.path.join(LOG_HTTP_SERVER_PATH, _log_file_name)
 # Про протокол ACME можно почитать тут: https://tools.ietf.org/html/rfc8555
 # https://letsencrypt.org/docs/acme-protocol-updates/
 # Для тестов
-DIRECTORY_URL = 'https://acme-staging-v02.api.letsencrypt.org/directory'
+# DIRECTORY_URL = 'https://acme-staging-v02.api.letsencrypt.org/directory'
 # Для продакшена
-# DIRECTORY_URL = 'https://acme-v02.api.letsencrypt.org/directory'
+DIRECTORY_URL = 'https://acme-v02.api.letsencrypt.org/directory'
 
 # Хз зачем, но работает.
 # Скорей всего это описано в спецификации протокола ACME
@@ -86,6 +86,8 @@ CERTIFICATE = {
         'port': [443],
         'update_txt': update_aa_txt,
 
+        'local_private_path': '***secret***',
+        'local_fullchain_path': '***secret***',
         'update_cert': update_cer_local,
         'local_commands': ['sudo systemctl restart apache2'],
     },
@@ -113,7 +115,7 @@ CERTIFICATE = {
         'ssh_host': '***secret***',
         'ssh_username': '***secret***',
         'ssh_pkey_path': os.path.join(os.path.dirname(__file__), 'keys', '***secret***'),
-        'ssh_private_path': '/***secret***',
+        'ssh_private_path': '***secret***',
         'ssh_fullchain_path': '***secret***',
         'ssh_commands': ['sudo systemctl restart postfix', 'sudo systemctl restart dovecot'],
     },

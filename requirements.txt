@@ -1,6 +1,6 @@
 dnspython==1.16.0
 acme==0.34.2
-paramiko==2.5.0
+paramiko==2.10.1
 scp==0.13.2
 pyTelegramBotAPI==3.6.6
 requests==2.21.0

@@ -55,7 +55,7 @@ func main() {
 	), log)
 
 	// --- NIC.RU client ---
-	nicClient := nic.New(cfg.NIC.AppLogin, cfg.NIC.AppPassword, cfg.NICTokenFile, log)
+	nicClient := nic.New(cfg.NIC.AppLogin, cfg.NIC.AppPassword, cfg.NIC.TokenFile, log)
 	if err := nicClient.Authorize(cfg.NIC.Username, cfg.NIC.Password); err != nil {
 		fatalf(notifiers, log, "ошибка авторизации NIC: %v", err)
 	}

@@ -17,7 +17,6 @@ type HTTPLogConfig struct {
 type Config struct {
 	LogDir            string
 	CertificateFolder string
-	NICTokenFile      string
 
 	Telegram TelegramConfig
 	ACME     ACMEConfig
@@ -48,6 +47,7 @@ type NICConfig struct {
 	Password    string
 	Service     string
 	Domain      string
+	TokenFile   string
 }
 
 type DNSConfig struct {
@@ -92,7 +92,6 @@ func Load(path string) (*Config, error) {
 	// [log]
 	cfg.LogDir = data.get("log", "folder")
 	cfg.CertificateFolder = data.get("log", "certificate_folder")
-	cfg.NICTokenFile = data.get("log", "nic_token_file")
 
 	// [log.http]
 	cfg.HTTPLog.TimeoutSec = 10
@@ -118,6 +117,7 @@ func Load(path string) (*Config, error) {
 		Password:    data.get("nic", "password"),
 		Service:     data.get("nic", "service"),
 		Domain:      data.get("nic", "domain"),
+		TokenFile:   data.get("nic", "token_file"),
 	}
 
 	// [dns]

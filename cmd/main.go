@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -129,14 +131,15 @@ func main() {
 	}
 
 	// --- SSL verification ---
-	msg := "<b>Сертификаты:</b>\n"
+	var sb strings.Builder
+	sb.WriteString("<b>Сертификаты:</b>\n")
 	for _, cert := range cfg.Certificates {
 		for _, host := range cert.Domains {
 			for _, port := range cert.Ports {
 				if checker.CheckSSL(host, port, log) {
-					msg += fmt.Sprintf("    ✅ %s:%d\n", host, port)
+					fmt.Fprintf(&sb, "    ✅ %s:%d\n", host, port)
 				} else {
-					msg += fmt.Sprintf("    ❌ %s:%d\n", host, port)
+					fmt.Fprintf(&sb, "    ❌ %s:%d\n", host, port)
 					allOK = false
 				}
 			}
@@ -144,9 +147,9 @@ func main() {
 	}
 
 	if !allOK {
-		msg += "\n⚠️⚠️⚠️ <b>Проверьте логи на сервере</b> ⚠️⚠️⚠️"
+		sb.WriteString("\n⚠️⚠️⚠️ <b>Проверьте логи на сервере</b> ⚠️⚠️⚠️")
 	}
-	notifier.SendAll(notifiers, msg, log)
+	notifier.SendAll(notifiers, sb.String(), log)
 	log.Info("завершено", "success", allOK)
 }
 
@@ -191,8 +194,15 @@ func buildLogger(logFile string, debug bool) *slog.Logger {
 	if logFile == "" {
 		return slog.New(stderr)
 	}
+	if dir := filepath.Dir(logFile); dir != "." {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			slog.New(stderr).Warn("не удалось создать директорию для лога, пишу только в stderr", "dir", dir, "err", err)
+			return slog.New(stderr)
+		}
+	}
 	f, err := os.OpenFile(logFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o644)
 	if err != nil {
+		slog.New(stderr).Warn("не удалось открыть файл лога, пишу только в stderr", "file", logFile, "err", err)
 		return slog.New(stderr)
 	}
 	return slog.New(newMultiHandler(stderr,

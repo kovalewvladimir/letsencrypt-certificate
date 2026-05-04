@@ -6,6 +6,19 @@ folder             = /var/log/letsencrypt-certificate
 certificate_folder = /var/lib/letsencrypt-certificate/certs
 nic_token_file     = /var/lib/letsencrypt-certificate/nic_token.json
 
+# ---------- HTTP лог (опционально) ----------
+# Отправляет каждую запись лога POST-запросом на удалённый сервер.
+# URL: http://host:port/path/<logFileName>
+# Тело: t=<formatted line>&no_date=true
+# Формат строки: "2006-01-02 15:04:05\tcertName\tINFO:\tmessage key=val"
+
+[log.http]
+# enable      = true
+# host        = 192.168.1.100
+# port        = 8080
+# path        = letsencrypt-certificate
+# timeout_sec = 10
+
 # ---------- Уведомления ----------
 # Поддерживается один или несколько блоков [notifier.*]
 # В будущем можно добавить [notifier.slack], [notifier.email] и т.д.

@@ -6,6 +6,14 @@ import (
 	"strings"
 )
 
+type HTTPLogConfig struct {
+	Enable     bool
+	Host       string
+	Port       string
+	Path       string
+	TimeoutSec int
+}
+
 type Config struct {
 	LogDir            string
 	CertificateFolder string
@@ -15,6 +23,7 @@ type Config struct {
 	ACME     ACMEConfig
 	NIC      NICConfig
 	DNS      DNSConfig
+	HTTPLog  HTTPLogConfig
 
 	Certificates []CertificateConfig
 
@@ -84,6 +93,16 @@ func Load(path string) (*Config, error) {
 	cfg.LogDir = data.get("log", "folder")
 	cfg.CertificateFolder = data.get("log", "certificate_folder")
 	cfg.NICTokenFile = data.get("log", "nic_token_file")
+
+	// [log.http]
+	cfg.HTTPLog.TimeoutSec = 10
+	cfg.HTTPLog.Enable = data.get("log.http", "enable") == "true"
+	cfg.HTTPLog.Host = data.get("log.http", "host")
+	cfg.HTTPLog.Port = data.get("log.http", "port")
+	cfg.HTTPLog.Path = data.get("log.http", "path")
+	if v := data.get("log.http", "timeout_sec"); v != "" {
+		cfg.HTTPLog.TimeoutSec, _ = strconv.Atoi(v)
+	}
 
 	// [acme]
 	cfg.ACME = ACMEConfig{

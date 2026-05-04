@@ -32,8 +32,10 @@ func main() {
 	debug := flag.Bool("debug", false, "включить уровень логирования DEBUG")
 	flag.Parse()
 
+	logFileName := time.Now().Format("2006-01-02_15-04-05") + ".log"
+
 	// --- Logger ---
-	log := buildLogger("", *debug)
+	log := buildLogger("", logFileName, *debug, config.HTTPLogConfig{})
 
 	// --- Config ---
 	cfg, err := config.Load(*configPath)
@@ -43,7 +45,7 @@ func main() {
 	}
 
 	// Reinitialize logger with file output if configured.
-	log = buildLogger(cfg.LogDir, *debug)
+	log = buildLogger(cfg.LogDir, logFileName, *debug, cfg.HTTPLog)
 	log.Info("letsencrypt-certificate запущен", "config", *configPath)
 
 	// --- Notifiers ---
@@ -87,7 +89,8 @@ func main() {
 		wg.Add(1)
 		go func(cert config.CertificateConfig) {
 			defer wg.Done()
-			log.Info("получение сертификата", "name", cert.Name, "domains", cert.Domains)
+			certLog := log.With("cert", cert.Name)
+			certLog.Info("получение сертификата", "domains", cert.Domains)
 			res, err := acme.ObtainCertificate(
 				cfg.ACME.DirectoryURL,
 				cfg.ACME.Email,
@@ -95,7 +98,7 @@ func main() {
 				cfg.CertificateFolder,
 				updateTXT,
 				waitTXT,
-				log,
+				certLog,
 			)
 			results <- certResult{cert: cert, res: res, err: err}
 		}(cert)
@@ -185,27 +188,40 @@ func buildACMEName(domain, rootDomain string) string {
 	return "_acme-challenge." + sub
 }
 
-func buildLogger(logDir string, debug bool) *slog.Logger {
+func buildLogger(logDir, logFileName string, debug bool, httpCfg config.HTTPLogConfig) *slog.Logger {
 	level := slog.LevelInfo
 	if debug {
 		level = slog.LevelDebug
 	}
 	stderr := slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: level})
-	if logDir == "" {
-		return slog.New(stderr)
+
+	var handlers []slog.Handler
+	handlers = append(handlers, stderr)
+
+	if logDir != "" {
+		if err := os.MkdirAll(logDir, 0o755); err != nil {
+			slog.New(stderr).Warn("не удалось создать директорию для лога, пишу только в stderr", "dir", logDir, "err", err)
+		} else {
+			logFile := filepath.Join(logDir, logFileName)
+			f, err := os.OpenFile(logFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o644)
+			if err != nil {
+				slog.New(stderr).Warn("не удалось открыть файл лога", "file", logFile, "err", err)
+			} else {
+				handlers = append(handlers, slog.NewTextHandler(f, &slog.HandlerOptions{Level: level}))
+			}
+		}
 	}
-	if err := os.MkdirAll(logDir, 0o755); err != nil {
-		slog.New(stderr).Warn("не удалось создать директорию для лога, пишу только в stderr", "dir", logDir, "err", err)
-		return slog.New(stderr)
+
+	if httpCfg.Enable {
+		path := httpCfg.Path
+		if path != "" && path[0] != '/' {
+			path = "/" + path
+		}
+		rawURL := "http://" + httpCfg.Host + ":" + httpCfg.Port + path + "/" + logFileName
+		handlers = append(handlers, newHTTPHandler(rawURL, level, httpCfg.TimeoutSec, debug))
 	}
-	logFile := filepath.Join(logDir, time.Now().Format("2006-01-02_15-04-05")+".log")
-	f, err := os.OpenFile(logFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o644)
-	if err != nil {
-		slog.New(stderr).Warn("не удалось открыть файл лога, пишу только в stderr", "file", logFile, "err", err)
-		return slog.New(stderr)
-	}
-	return slog.New(newMultiHandler(stderr,
-		slog.NewTextHandler(f, &slog.HandlerOptions{Level: level})))
+
+	return slog.New(newMultiHandler(handlers...))
 }
 
 func fatalf(notifiers []notifier.Notifier, log *slog.Logger, format string, args ...any) {

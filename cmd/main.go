@@ -143,9 +143,6 @@ func main() {
 	for r := range results {
 		if r.err != nil {
 			log.Error("ошибка получения сертификата", "name", r.cert.Name, "err", r.err)
-			notifier.SendAll(notifiers, fmt.Sprintf(
-				"❌ <b>Ошибка сертификата %s</b>\n%v", r.cert.Name, r.err,
-			), log)
 			allOK = false
 			continue
 		}

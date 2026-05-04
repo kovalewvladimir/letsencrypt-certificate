@@ -16,6 +16,7 @@ nic_token_file     = /var/lib/letsencrypt-certificate/nic_token.json
 # enable      = true
 # host        = 192.168.1.100
 # port        = 8080
+# read_port   = 8080   ; порт для ссылки в уведомлении (если не задан — ссылка не выводится)
 # path        = letsencrypt-certificate
 # timeout_sec = 10
 

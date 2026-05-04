@@ -174,6 +174,16 @@ func main() {
 
 	if !allOK {
 		sb.WriteString("\n⚠️⚠️⚠️ <b>Проверьте логи на сервере</b> ⚠️⚠️⚠️")
+		if cfg.LogDir != "" {
+			fmt.Fprintf(&sb, "\n<code>%s</code>", filepath.Join(cfg.LogDir, logFileName))
+		}
+		if cfg.HTTPLog.Enable && cfg.HTTPLog.ReadPort != "" {
+			path := cfg.HTTPLog.Path
+			if path != "" && path[0] != '/' {
+				path = "/" + path
+			}
+			fmt.Fprintf(&sb, "\nhttp://%s:%s%s/%s", cfg.HTTPLog.Host, cfg.HTTPLog.ReadPort, path, logFileName)
+		}
 	}
 	notifier.SendAll(notifiers, sb.String(), log)
 	log.Info("завершено", "success", allOK)

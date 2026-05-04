@@ -10,6 +10,7 @@ type HTTPLogConfig struct {
 	Enable     bool
 	Host       string
 	Port       string
+	ReadPort   string
 	Path       string
 	TimeoutSec int
 }
@@ -98,6 +99,7 @@ func Load(path string) (*Config, error) {
 	cfg.HTTPLog.Enable = data.get("log.http", "enable") == "true"
 	cfg.HTTPLog.Host = data.get("log.http", "host")
 	cfg.HTTPLog.Port = data.get("log.http", "port")
+	cfg.HTTPLog.ReadPort = data.get("log.http", "read_port")
 	cfg.HTTPLog.Path = data.get("log.http", "path")
 	if v := data.get("log.http", "timeout_sec"); v != "" {
 		cfg.HTTPLog.TimeoutSec, _ = strconv.Atoi(v)

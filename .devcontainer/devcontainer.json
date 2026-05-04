@@ -9,7 +9,11 @@
 		"vscode": {
 			"settings": {},
 			"extensions": [
-				"golang.go"
+				"golang.go",
+
+				// Словари для проверки орфографии
+				"streetsidesoftware.code-spell-checker",
+				"streetsidesoftware.code-spell-checker-russian"
 			]
 		}
 	}

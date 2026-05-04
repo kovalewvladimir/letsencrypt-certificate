@@ -2,7 +2,7 @@
 # Скопируйте в config.ini и заполните значения
 
 [log]
-file               = /var/log/letsencrypt-certificate/app.log
+folder             = /var/log/letsencrypt-certificate
 certificate_folder = /var/lib/letsencrypt-certificate/certs
 nic_token_file     = /var/lib/letsencrypt-certificate/nic_token.json
 

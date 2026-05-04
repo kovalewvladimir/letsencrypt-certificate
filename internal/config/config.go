@@ -7,7 +7,7 @@ import (
 )
 
 type Config struct {
-	LogFile           string
+	LogDir            string
 	CertificateFolder string
 	NICTokenFile      string
 
@@ -81,7 +81,7 @@ func Load(path string) (*Config, error) {
 	}
 
 	// [log]
-	cfg.LogFile = data.get("log", "file")
+	cfg.LogDir = data.get("log", "folder")
 	cfg.CertificateFolder = data.get("log", "certificate_folder")
 	cfg.NICTokenFile = data.get("log", "nic_token_file")
 

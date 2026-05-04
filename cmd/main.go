@@ -43,7 +43,7 @@ func main() {
 	}
 
 	// Reinitialize logger with file output if configured.
-	log = buildLogger(cfg.LogFile, *debug)
+	log = buildLogger(cfg.LogDir, *debug)
 	log.Info("letsencrypt-certificate запущен", "config", *configPath)
 
 	// --- Notifiers ---
@@ -185,21 +185,20 @@ func buildACMEName(domain, rootDomain string) string {
 	return "_acme-challenge." + sub
 }
 
-func buildLogger(logFile string, debug bool) *slog.Logger {
+func buildLogger(logDir string, debug bool) *slog.Logger {
 	level := slog.LevelInfo
 	if debug {
 		level = slog.LevelDebug
 	}
 	stderr := slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: level})
-	if logFile == "" {
+	if logDir == "" {
 		return slog.New(stderr)
 	}
-	if dir := filepath.Dir(logFile); dir != "." {
-		if err := os.MkdirAll(dir, 0o755); err != nil {
-			slog.New(stderr).Warn("не удалось создать директорию для лога, пишу только в stderr", "dir", dir, "err", err)
-			return slog.New(stderr)
-		}
+	if err := os.MkdirAll(logDir, 0o755); err != nil {
+		slog.New(stderr).Warn("не удалось создать директорию для лога, пишу только в stderr", "dir", logDir, "err", err)
+		return slog.New(stderr)
 	}
+	logFile := filepath.Join(logDir, time.Now().Format("2006-01-02_15-04-05")+".log")
 	f, err := os.OpenFile(logFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o644)
 	if err != nil {
 		slog.New(stderr).Warn("не удалось открыть файл лога, пишу только в stderr", "file", logFile, "err", err)

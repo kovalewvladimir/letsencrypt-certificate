@@ -64,7 +64,7 @@ func main() {
 	}
 
 	waitTXT := func(domain, value string) error {
-		nsIPs, err := dns.GetNameserverIPs(domain, log)
+		nsIPs, err := dns.GetNameserverIPs(domain, cfg.DNS.Resolver, log)
 		if err != nil {
 			return err
 		}

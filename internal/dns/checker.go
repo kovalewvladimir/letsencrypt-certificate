@@ -9,11 +9,23 @@ import (
 	"time"
 )
 
+func newResolver(addr string) *net.Resolver {
+	return &net.Resolver{
+		PreferGo: true,
+		Dial: func(ctx context.Context, network, _ string) (net.Conn, error) {
+			return (&net.Dialer{Timeout: 5 * time.Second}).DialContext(ctx, "udp", addr+":53")
+		},
+	}
+}
+
 // GetNameserverIPs resolves authoritative NS servers for domain to IP addresses.
 // If the domain has no NS records it strips one label and tries the parent.
-func GetNameserverIPs(domain string, log *slog.Logger) ([]string, error) {
+// resolver is the DNS server address (e.g. "8.8.8.8") used for all lookups.
+func GetNameserverIPs(domain, resolver string, log *slog.Logger) ([]string, error) {
+	r := newResolver(resolver)
+	ctx := context.Background()
 	for {
-		nss, err := net.LookupNS(domain)
+		nss, err := r.LookupNS(ctx, domain)
 		if err != nil {
 			// Strip one label and try parent.
 			dot := strings.Index(domain, ".")
@@ -32,7 +44,7 @@ func GetNameserverIPs(domain string, log *slog.Logger) ([]string, error) {
 
 		var ips []string
 		for _, ns := range nss {
-			addrs, err := net.LookupHost(ns.Host)
+			addrs, err := r.LookupHost(ctx, ns.Host)
 			if err != nil {
 				continue
 			}

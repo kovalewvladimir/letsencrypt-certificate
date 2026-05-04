@@ -44,6 +44,7 @@ type NICConfig struct {
 type DNSConfig struct {
 	CheckIntervalSec int
 	CheckMaxAttempts int
+	Resolver         string
 }
 
 type CertificateConfig struct {
@@ -103,11 +104,15 @@ func Load(path string) (*Config, error) {
 	// [dns]
 	cfg.DNS.CheckIntervalSec = 300
 	cfg.DNS.CheckMaxAttempts = 60
+	cfg.DNS.Resolver = "8.8.8.8"
 	if v := data.get("dns", "check_interval_sec"); v != "" {
 		cfg.DNS.CheckIntervalSec, _ = strconv.Atoi(v)
 	}
 	if v := data.get("dns", "check_max_attempts"); v != "" {
 		cfg.DNS.CheckMaxAttempts, _ = strconv.Atoi(v)
+	}
+	if v := data.get("dns", "resolver"); v != "" {
+		cfg.DNS.Resolver = v
 	}
 
 	// [notifier.*] sections

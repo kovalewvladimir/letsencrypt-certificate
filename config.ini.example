@@ -11,6 +11,7 @@ nic_token_file     = /var/lib/letsencrypt-certificate/nic_token.json
 # В будущем можно добавить [notifier.slack], [notifier.email] и т.д.
 
 [notifier.telegram]
+enabled   = true
 token     = 123456:ABC-DEF-GHI...
 recipient = -100123456789
 

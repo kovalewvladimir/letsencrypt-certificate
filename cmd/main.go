@@ -155,9 +155,6 @@ func main() {
 
 		if err := deploy(r.cert, r.res, log); err != nil {
 			log.Error("ошибка деплоя", "name", r.cert.Name, "err", err)
-			notifier.SendAll(notifiers, fmt.Sprintf(
-				"❌ <b>Ошибка деплоя %s</b>\n%v", r.cert.Name, err,
-			), log)
 			allOK = false
 		}
 	}

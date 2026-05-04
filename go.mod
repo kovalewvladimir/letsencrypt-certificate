@@ -1,4 +1,4 @@
-module github.com/kovalewvladimir/letsencrypt-certificate
+module letsencrypt-certificate
 
 go 1.25.0
 

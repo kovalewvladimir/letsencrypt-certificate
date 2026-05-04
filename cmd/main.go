@@ -10,13 +10,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kovalewvladimir/letsencrypt-certificate/internal/acme"
-	"github.com/kovalewvladimir/letsencrypt-certificate/internal/checker"
-	"github.com/kovalewvladimir/letsencrypt-certificate/internal/config"
-	"github.com/kovalewvladimir/letsencrypt-certificate/internal/deployer"
-	"github.com/kovalewvladimir/letsencrypt-certificate/internal/dns"
-	"github.com/kovalewvladimir/letsencrypt-certificate/internal/nic"
-	"github.com/kovalewvladimir/letsencrypt-certificate/internal/notifier"
+	"letsencrypt-certificate/internal/acme"
+	"letsencrypt-certificate/internal/checker"
+	"letsencrypt-certificate/internal/config"
+	"letsencrypt-certificate/internal/deployer"
+	"letsencrypt-certificate/internal/dns"
+	"letsencrypt-certificate/internal/nic"
+	"letsencrypt-certificate/internal/notifier"
 )
 
 type certResult struct {

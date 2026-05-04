@@ -50,7 +50,7 @@ func WaitForTXT(domain, value string, nsIPs []string, interval time.Duration, ma
 	acmeDomain := "_acme-challenge." + domain
 
 	for attempt := 1; attempt <= maxAttempts && len(remaining) > 0; attempt++ {
-		log.Info("dns: waiting for TXT propagation", "attempt", attempt, "max", maxAttempts, "remaining_ns", len(remaining))
+		log.Info("dns: ожидание распространения TXT-записи", "attempt", attempt, "max", maxAttempts, "remaining_ns", len(remaining))
 		time.Sleep(interval)
 
 		var stillWaiting []string
@@ -58,14 +58,14 @@ func WaitForTXT(domain, value string, nsIPs []string, interval time.Duration, ma
 			txt, err := queryTXT(acmeDomain, nsIP)
 			if err != nil {
 				stillWaiting = append(stillWaiting, nsIP)
-				log.Debug("dns: TXT not yet visible", "ns", nsIP, "err", err)
+				log.Debug("dns: TXT-запись ещё не видна", "ns", nsIP, "err", err)
 				continue
 			}
 			if txt == value {
-				log.Info("dns: TXT confirmed", "ns", nsIP)
+				log.Info("dns: TXT-запись подтверждена", "ns", nsIP)
 			} else {
 				stillWaiting = append(stillWaiting, nsIP)
-				log.Debug("dns: TXT mismatch", "ns", nsIP, "got", txt)
+				log.Debug("dns: TXT-запись не совпадает", "ns", nsIP, "got", txt)
 			}
 		}
 		remaining = stillWaiting

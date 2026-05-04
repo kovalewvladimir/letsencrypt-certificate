@@ -19,24 +19,24 @@ func CheckSSL(host string, port int, log *slog.Logger) bool {
 		&tls.Config{ServerName: host},
 	)
 	if err != nil {
-		log.Error("ssl check failed", "addr", addr, "err", err)
+		log.Error("ssl: проверка не прошла", "addr", addr, "err", err)
 		return false
 	}
 	defer conn.Close()
 
 	certs := conn.ConnectionState().PeerCertificates
 	if len(certs) == 0 {
-		log.Error("ssl check: no certificates", "addr", addr)
+		log.Error("ssl: нет сертификатов", "addr", addr)
 		return false
 	}
 
 	cert := certs[0]
 	now := time.Now()
 	if now.After(cert.NotAfter) {
-		log.Error("ssl check: certificate expired", "addr", addr, "expired", cert.NotAfter)
+		log.Error("ssl: сертификат истёк", "addr", addr, "expired", cert.NotAfter)
 		return false
 	}
 
-	log.Info("ssl check: OK", "addr", addr, "expires", cert.NotAfter.Format("2006-01-02"))
+	log.Info("ssl: ОК", "addr", addr, "expires", cert.NotAfter.Format("2006-01-02"))
 	return true
 }

@@ -42,7 +42,7 @@ func New(appLogin, appPassword, tokenFile string, log *slog.Logger) *Client {
 func (c *Client) Authorize(username, password string) error {
 	if cached, ok := c.loadToken(); ok {
 		c.token = cached
-		c.log.Info("nic: loaded token from cache")
+		c.log.Info("nic: токен загружен из кэша")
 		return nil
 	}
 	return c.fetchToken(username, password)
@@ -61,7 +61,7 @@ func (c *Client) loadToken() (string, bool) {
 		return "", false
 	}
 	if time.Now().Unix() >= tc.CreatedAt+int64(tc.ExpiresIn) {
-		c.log.Info("nic: cached token expired")
+		c.log.Info("nic: кэшированный токен истёк")
 		return "", false
 	}
 	return tc.AccessToken, true
@@ -109,7 +109,7 @@ func (c *Client) fetchToken(username, password string) error {
 			_ = os.WriteFile(c.tokenFile, b, 0o600)
 		}
 	}
-	c.log.Info("nic: obtained new token")
+	c.log.Info("nic: получен новый токен")
 	return nil
 }
 
@@ -163,7 +163,7 @@ func (c *Client) AddTXTRecord(service, zone, name, value string, ttl int) error 
 	if err != nil {
 		return err
 	}
-	c.log.Info("nic: TXT record added", "name", name)
+	c.log.Info("nic: TXT-запись добавлена", "name", name)
 	return nil
 }
 
@@ -174,7 +174,7 @@ func (c *Client) DeleteRecord(id int, service, zone string) error {
 	if err != nil {
 		return err
 	}
-	c.log.Info("nic: record deleted", "id", id)
+	c.log.Info("nic: запись удалена", "id", id)
 	return nil
 }
 
@@ -185,7 +185,7 @@ func (c *Client) Commit(service, zone string) error {
 	if err != nil {
 		return err
 	}
-	c.log.Info("nic: zone committed", "service", service, "zone", zone)
+	c.log.Info("nic: зона применена", "service", service, "zone", zone)
 	return nil
 }
 
@@ -198,7 +198,7 @@ func (c *Client) UpdateTXTRecord(service, zone, name, value string) error {
 	}
 	for _, r := range records {
 		if r.Type == "TXT" && r.Name == name {
-			c.log.Info("nic: deleting old TXT record", "id", r.ID, "name", r.Name)
+			c.log.Info("nic: удаление старой TXT-записи", "id", r.ID, "name", r.Name)
 			if err := c.DeleteRecord(r.ID, service, zone); err != nil {
 				return err
 			}

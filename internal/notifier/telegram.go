@@ -43,6 +43,6 @@ func (t *telegram) Send(text string) error {
 		body, _ := io.ReadAll(resp.Body)
 		return fmt.Errorf("telegram: status %d: %s", resp.StatusCode, body)
 	}
-	t.log.Info("telegram: message sent")
+	t.log.Info("telegram: сообщение отправлено")
 	return nil
 }

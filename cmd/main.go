@@ -35,13 +35,13 @@ func main() {
 	// --- Config ---
 	cfg, err := config.Load(*configPath)
 	if err != nil {
-		log.Error("failed to load config", "err", err)
+		log.Error("не удалось загрузить конфигурацию", "err", err)
 		os.Exit(1)
 	}
 
 	// Reinitialize logger with file output if configured.
 	log = buildLogger(cfg.LogFile)
-	log.Info("letsencrypt-certificate started", "config", *configPath)
+	log.Info("letsencrypt-certificate запущен", "config", *configPath)
 
 	// --- Notifiers ---
 	notifiers := notifier.NewFromConfig(cfg.Notifiers, log)
@@ -54,7 +54,7 @@ func main() {
 	// --- NIC.RU client ---
 	nicClient := nic.New(cfg.NIC.AppLogin, cfg.NIC.AppPassword, cfg.NICTokenFile, log)
 	if err := nicClient.Authorize(cfg.NIC.Username, cfg.NIC.Password); err != nil {
-		fatalf(notifiers, log, "NIC authorization failed: %v", err)
+		fatalf(notifiers, log, "ошибка авторизации NIC: %v", err)
 	}
 
 	updateTXT := func(domain, value string) error {
@@ -77,14 +77,14 @@ func main() {
 
 	for i, cert := range cfg.Certificates {
 		if i > 0 {
-			log.Info("waiting before starting next certificate", "delay", certStartDelay)
+			log.Info("ожидание перед запуском следующего сертификата", "delay", certStartDelay)
 			time.Sleep(certStartDelay)
 		}
 
 		wg.Add(1)
 		go func(cert config.CertificateConfig) {
 			defer wg.Done()
-			log.Info("obtaining certificate", "name", cert.Name, "domains", cert.Domains)
+			log.Info("получение сертификата", "name", cert.Name, "domains", cert.Domains)
 			res, err := acme.ObtainCertificate(
 				cfg.ACME.DirectoryURL,
 				cfg.ACME.Email,
@@ -107,7 +107,7 @@ func main() {
 	allOK := true
 	for r := range results {
 		if r.err != nil {
-			log.Error("certificate failed", "name", r.cert.Name, "err", r.err)
+			log.Error("ошибка получения сертификата", "name", r.cert.Name, "err", r.err)
 			notifier.SendAll(notifiers, fmt.Sprintf(
 				"❌ <b>Ошибка сертификата %s</b>\n%v", r.cert.Name, r.err,
 			), log)
@@ -115,11 +115,11 @@ func main() {
 			continue
 		}
 
-		log.Info("certificate obtained", "name", r.cert.Name,
+		log.Info("сертификат получен", "name", r.cert.Name,
 			"private", r.res.PrivatePath, "fullchain", r.res.FullchainPath)
 
 		if err := deploy(r.cert, r.res, log); err != nil {
-			log.Error("deploy failed", "name", r.cert.Name, "err", err)
+			log.Error("ошибка деплоя", "name", r.cert.Name, "err", err)
 			notifier.SendAll(notifiers, fmt.Sprintf(
 				"❌ <b>Ошибка деплоя %s</b>\n%v", r.cert.Name, err,
 			), log)
@@ -146,7 +146,7 @@ func main() {
 		msg += "\n⚠️⚠️⚠️ <b>Проверьте логи на сервере</b> ⚠️⚠️⚠️"
 	}
 	notifier.SendAll(notifiers, msg, log)
-	log.Info("done", "success", allOK)
+	log.Info("завершено", "success", allOK)
 }
 
 func deploy(cert config.CertificateConfig, res *acme.Result, log *slog.Logger) error {

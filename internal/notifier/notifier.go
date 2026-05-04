@@ -14,14 +14,14 @@ func NewFromConfig(notifiers map[string]map[string]string, log *slog.Logger) []N
 
 	if kv, ok := notifiers["telegram"]; ok {
 		if kv["enabled"] == "false" {
-			log.Info("notifier: telegram disabled via config — skipping")
+			log.Info("notifier: telegram отключён в конфигурации — пропускаем")
 		} else {
 			token := kv["token"]
 			recipient := kv["recipient"]
 			if token != "" && recipient != "" {
 				result = append(result, NewTelegram(token, recipient, log))
 			} else {
-				log.Warn("notifier: telegram configured but token/recipient missing — skipping")
+				log.Warn("notifier: telegram настроен, но токен/получатель не указан — пропускаем")
 			}
 		}
 	}
@@ -33,7 +33,7 @@ func NewFromConfig(notifiers map[string]map[string]string, log *slog.Logger) []N
 func SendAll(notifiers []Notifier, text string, log *slog.Logger) {
 	for _, n := range notifiers {
 		if err := n.Send(text); err != nil {
-			log.Error("notifier: send failed", "err", err)
+			log.Error("notifier: ошибка отправки", "err", err)
 		}
 	}
 }

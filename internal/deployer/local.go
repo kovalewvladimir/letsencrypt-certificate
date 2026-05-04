@@ -17,7 +17,7 @@ func DeployLocal(
 	log *slog.Logger,
 ) error {
 	hostname, _ := os.Hostname()
-	log.Info("deployer: updating local certificates", "host", hostname)
+	log.Info("deployer: обновление локальных сертификатов", "host", hostname)
 
 	if err := copyFile(privateSrc, privateDst); err != nil {
 		return fmt.Errorf("deployer local: copy private key: %w", err)
@@ -27,14 +27,14 @@ func DeployLocal(
 	}
 
 	for _, cmd := range commands {
-		log.Info("deployer local: running command", "cmd", cmd)
+		log.Info("deployer local: выполнение команды", "cmd", cmd)
 		parts := strings.Fields(cmd)
 		if len(parts) == 0 {
 			continue
 		}
 		out, err := exec.Command(parts[0], parts[1:]...).CombinedOutput()
 		if len(out) > 0 {
-			log.Info("deployer local: command output", "cmd", cmd, "output", string(out))
+			log.Info("deployer local: вывод команды", "cmd", cmd, "output", string(out))
 		}
 		if err != nil {
 			return fmt.Errorf("deployer local: command %q: %w", cmd, err)

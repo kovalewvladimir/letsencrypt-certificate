@@ -20,7 +20,7 @@ func DeploySSH(
 	commands []string,
 	log *slog.Logger,
 ) error {
-	log.Info("deployer: updating remote certificates", "host", host)
+	log.Info("deployer: обновление удалённых сертификатов", "host", host)
 
 	signer, err := loadSigner(keyPath)
 	if err != nil {
@@ -51,10 +51,10 @@ func DeploySSH(
 
 	// Run post-deploy commands.
 	for _, cmd := range commands {
-		log.Info("deployer ssh: running command", "host", host, "cmd", cmd)
+		log.Info("deployer ssh: выполнение команды", "host", host, "cmd", cmd)
 		out, err := sshRun(conn, cmd)
 		if out != "" {
-			log.Info("deployer ssh: command output", "host", host, "cmd", cmd, "output", out)
+			log.Info("deployer ssh: вывод команды", "host", host, "cmd", cmd, "output", out)
 		}
 		if err != nil {
 			return fmt.Errorf("deployer ssh: command %q on %s: %w", cmd, host, err)
@@ -108,7 +108,7 @@ func scpUpload(conn *ssh.Client, localPath, remotePath string, log *slog.Logger)
 	if err := session.Wait(); err != nil {
 		return err
 	}
-	log.Info("deployer ssh: file uploaded", "local", localPath, "remote", remotePath)
+	log.Info("deployer ssh: файл загружен", "local", localPath, "remote", remotePath)
 	return nil
 }
 

@@ -58,7 +58,7 @@ func ObtainCertificate(
 	if _, err := client.Register(ctx, acct, acme.AcceptTOS); err != nil {
 		return nil, fmt.Errorf("acme: register: %w", err)
 	}
-	log.Info("acme: account registered", "email", email)
+	log.Info("acme: аккаунт зарегистрирован", "email", email)
 
 	// Generate certificate private key + CSR.
 	certKey, err := rsa.GenerateKey(rand.Reader, certKeyBits)
@@ -79,7 +79,7 @@ func ObtainCertificate(
 	if err != nil {
 		return nil, fmt.Errorf("acme: authorize order: %w", err)
 	}
-	log.Info("acme: order created", "domains", domains)
+	log.Info("acme: заказ создан", "domains", domains)
 
 	// Complete each authorization via DNS-01.
 	for _, authzURL := range order.AuthzURLs {
@@ -104,7 +104,7 @@ func ObtainCertificate(
 		if err != nil {
 			return nil, fmt.Errorf("acme: DNS01ChallengeRecord: %w", err)
 		}
-		log.Info("acme: setting TXT record", "domain", authz.Identifier.Value)
+		log.Info("acme: установка TXT-записи", "domain", authz.Identifier.Value)
 
 		if err := updateTXT(authz.Identifier.Value, txtValue); err != nil {
 			return nil, fmt.Errorf("acme: update TXT: %w", err)
@@ -119,7 +119,7 @@ func ObtainCertificate(
 		if _, err := client.WaitAuthorization(ctx, authzURL); err != nil {
 			return nil, fmt.Errorf("acme: wait authorization: %w", err)
 		}
-		log.Info("acme: authorization complete", "domain", authz.Identifier.Value)
+		log.Info("acme: авторизация завершена", "domain", authz.Identifier.Value)
 	}
 
 	// Finalize order and fetch certificate chain.
@@ -127,7 +127,7 @@ func ObtainCertificate(
 	if err != nil {
 		return nil, fmt.Errorf("acme: create cert: %w", err)
 	}
-	log.Info("acme: certificate issued")
+	log.Info("acme: сертификат выпущен")
 
 	// Build fullchain PEM.
 	var fullchainPEM []byte

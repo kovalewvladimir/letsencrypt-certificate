@@ -43,7 +43,7 @@ if __name__ == "__main__":
             # Задержка между стартами потоков
             # Если убрать, то будет конфликт при обновлении TXT записи
             # тк одновременно будут пытаться обновиться TXT записи на одном DNS хостинге
-            sleep(60)
+            sleep(600)
         for name, settings in CERTIFICATE.items():
             worker = settings.get('worker')
             worker_result = worker.join()
@@ -54,8 +54,11 @@ if __name__ == "__main__":
 
         # Обновляем сертификаты на серверах
         for name, settings in CERTIFICATE.items():
-            update_cer = settings.get('update_cert')
-            update_cer(settings)
+            try:
+                update_cer = settings.get('update_cert')
+                update_cer(settings)
+            except:
+                logger.error('Не удалось обновить сертификат на ' + name)
 
         # Проверяем обновились ли сертификаты
         msg = '<b>Сертификаты:</b>\n'

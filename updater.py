@@ -60,35 +60,38 @@ def update_cer_by_ssh(settings):
     # Если поместить его вверх, будет ошибка циклического импорта
     from logger import logger
 
-    with paramiko.SSHClient() as ssh:
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    try:
+        with paramiko.SSHClient() as ssh:
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-        ssh_host = settings.get('ssh_host')
-        ssh_username = settings.get('ssh_username')
-        ssh_pkey_file = settings.get('ssh_pkey_path')
-        private_path = settings.get('private_path')
-        fullchain_path = settings.get('fullchain_path')
-        ssh_private_path = settings.get('ssh_private_path')
-        ssh_fullchain_path = settings.get('ssh_fullchain_path')
-        ssh_commands = settings.get('ssh_commands')
+            ssh_host = settings.get('ssh_host')
+            ssh_username = settings.get('ssh_username')
+            ssh_pkey_file = settings.get('ssh_pkey_path')
+            private_path = settings.get('private_path')
+            fullchain_path = settings.get('fullchain_path')
+            ssh_private_path = settings.get('ssh_private_path')
+            ssh_fullchain_path = settings.get('ssh_fullchain_path')
+            ssh_commands = settings.get('ssh_commands')
 
-        logger.info('Обновляю сертификат на %s' % ssh_host)
+            logger.info('Обновляю сертификат на %s' % ssh_host)
 
-        # Подтверждаем ключи от хостов автоматически
-        privkey = paramiko.RSAKey.from_private_key_file(ssh_pkey_file)
-        ssh.connect(ssh_host, username=ssh_username, pkey=privkey)
-        with SCPClient(ssh.get_transport()) as scp:
-            scp.put(private_path, remote_path=ssh_private_path)
-            scp.put(fullchain_path, remote_path=ssh_fullchain_path)
-            for command in ssh_commands:
-                logger.info('%s: ssh-command: %s' % (ssh_host, command))
-                stdin, stdout, stderr = ssh.exec_command(command)
-                stdout = stdout.read().decode('utf-8')
-                stderr = stderr.read().decode('utf-8')
-                if stdout:
-                    logger.info('%s: ssh-stdout: %s' % (ssh_host, stdout))
-                if stderr:
-                    logger.error('%s: ssh-stderr: %s' % (ssh_host, stderr))
+            # Подтверждаем ключи от хостов автоматически
+            privkey = paramiko.RSAKey.from_private_key_file(ssh_pkey_file)
+            ssh.connect(ssh_host, username=ssh_username, pkey=privkey)
+            with SCPClient(ssh.get_transport()) as scp:
+                scp.put(private_path, remote_path=ssh_private_path)
+                scp.put(fullchain_path, remote_path=ssh_fullchain_path)
+                for command in ssh_commands:
+                    logger.info('%s: ssh-command: %s' % (ssh_host, command))
+                    stdin, stdout, stderr = ssh.exec_command(command)
+                    stdout = stdout.read().decode('utf-8')
+                    stderr = stderr.read().decode('utf-8')
+                    if stdout:
+                        logger.info('%s: ssh-stdout: %s' % (ssh_host, stdout))
+                    if stderr:
+                        logger.error('%s: ssh-stderr: %s' % (ssh_host, stderr))
+    except paramiko.ssh_exception.AuthenticationException:
+        logger.error('%s: Authentication Error: %s' % (ssh_host))
 
 
 def update_cer_local(settings):

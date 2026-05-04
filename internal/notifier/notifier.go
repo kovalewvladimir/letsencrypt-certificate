@@ -26,6 +26,20 @@ func NewFromConfig(notifiers map[string]map[string]string, log *slog.Logger) []N
 		}
 	}
 
+	if kv, ok := notifiers["maxru"]; ok {
+		if kv["enabled"] == "false" {
+			log.Info("notifier: maxru отключён в конфигурации — пропускаем")
+		} else {
+			accessToken := kv["access_token"]
+			chatID := kv["chat_id"]
+			if accessToken != "" && chatID != "" {
+				result = append(result, NewMaxRu(accessToken, chatID, log))
+			} else {
+				log.Warn("notifier: maxru настроен, но access_token/chat_id не указан — пропускаем")
+			}
+		}
+	}
+
 	return result
 }
 

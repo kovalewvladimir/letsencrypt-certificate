@@ -28,6 +28,11 @@ enabled   = true
 token     = 123456:ABC-DEF-GHI...
 recipient = -100123456789
 
+[notifier.maxru]
+enabled      = true
+access_token = Bearer eyJhbGciOiJSUzI1NiJ9...
+chat_id      = 123456789
+
 # ---------- Let's Encrypt ----------
 
 [acme]

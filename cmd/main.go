@@ -30,6 +30,7 @@ func main() {
 	debug := flag.Bool("debug", false, "включить уровень логирования DEBUG")
 	list := flag.Bool("list", false, "показать имена всех сконфигурированных сертификатов и выйти")
 	certs := flag.String("certs", "", "запустить только указанные сертификаты (через запятую, например: example.com,test.org)")
+	force := flag.Bool("force", false, "принудительно обновить сертификаты, игнорируя срок истечения")
 	flag.Parse()
 
 	logFileName := time.Now().Format("2006-01-02_15-04-05") + ".log"
@@ -85,10 +86,44 @@ func main() {
 
 	hostname, _ := os.Hostname()
 	notifier.SendAll(notifiers, fmt.Sprintf(
-		"<b>Запускаю обновление сертификатов</b>\nХост: <code>%s</code>", hostname,
+		"<b>Проверяю сертификаты</b>\nХост: <code>%s</code>", hostname,
 	), log)
 
-	// --- NIC.RU client ---
+	// --- Определяем, какие сертификаты нужно обновить ---
+	type skipInfo struct {
+		cert     config.CertificateConfig
+		daysLeft int
+	}
+	var toRenew []config.CertificateConfig
+	var toSkip []skipInfo
+
+	for _, cert := range cfg.Certificates {
+		renew, days := needsRenewal(cert, *force, log)
+		if renew {
+			toRenew = append(toRenew, cert)
+		} else {
+			toSkip = append(toSkip, skipInfo{cert: cert, daysLeft: days})
+		}
+	}
+
+	allOK := true
+	var sb strings.Builder
+	sb.WriteString("<b>Сертификаты:</b>\n")
+
+	// Сертификаты, которые не требуют обновления
+	for _, s := range toSkip {
+		log.Info("сертификат актуален, пропускаю", "cert", s.cert.Name, "days_left", s.daysLeft)
+		fmt.Fprintf(&sb, "  ✅ <b>%s</b> — %d дней до истечения\n", s.cert.Name, s.daysLeft)
+	}
+
+	if len(toRenew) == 0 {
+		log.Info("все сертификаты актуальны, обновление не требуется")
+		notifier.SendAll(notifiers, sb.String(), log)
+		log.Info("завершено", "success", true)
+		return
+	}
+
+	// --- NIC.RU client (инициализируем только если есть что обновлять) ---
 	nicClient := nic.New(cfg.NIC.AppLogin, cfg.NIC.AppPassword, cfg.NIC.TokenFile, log)
 	if err := nicClient.Authorize(cfg.NIC.Username, cfg.NIC.Password); err != nil {
 		fatalf(notifiers, log, "ошибка авторизации NIC: %v", err)
@@ -112,11 +147,11 @@ func main() {
 	}
 
 	// --- Obtain certificates (sequential start, parallel wait) ---
-	results := make(chan certResult, len(cfg.Certificates))
+	results := make(chan certResult, len(toRenew))
 	var wg sync.WaitGroup
 
 	go func() {
-		for _, cert := range cfg.Certificates {
+		for _, cert := range toRenew {
 			wg.Add(1)
 			go func(cert config.CertificateConfig) {
 				defer wg.Done()
@@ -139,7 +174,6 @@ func main() {
 	}()
 
 	// --- Collect results & deploy ---
-	allOK := true
 	for r := range results {
 		if r.err != nil {
 			log.Error("ошибка получения сертификата", "name", r.cert.Name, "err", r.err)
@@ -156,19 +190,21 @@ func main() {
 		}
 	}
 
-	// --- SSL verification ---
-	var sb strings.Builder
-	sb.WriteString("<b>Сертификаты:</b>\n")
-	for _, cert := range cfg.Certificates {
+	// --- SSL verification для обновлённых сертификатов ---
+	for _, cert := range toRenew {
+		certOK := true
 		for _, host := range cert.Domains {
 			for _, port := range cert.Ports {
-				if checker.CheckSSL(host, port, log) {
-					fmt.Fprintf(&sb, "    ✅ %s:%d\n", host, port)
-				} else {
-					fmt.Fprintf(&sb, "    ❌ %s:%d\n", host, port)
+				if !checker.CheckSSL(host, port, log) {
+					certOK = false
 					allOK = false
 				}
 			}
+		}
+		if certOK {
+			fmt.Fprintf(&sb, "  🔄 <b>%s</b> — обновлён ✅\n", cert.Name)
+		} else {
+			fmt.Fprintf(&sb, "  🔄 <b>%s</b> — обновлён ❌\n", cert.Name)
 		}
 	}
 
@@ -187,6 +223,29 @@ func main() {
 	}
 	notifier.SendAll(notifiers, sb.String(), log)
 	log.Info("завершено", "success", allOK)
+}
+
+// needsRenewal returns true if the certificate needs to be renewed.
+// Also returns the number of days left until expiry (or -1 on error).
+func needsRenewal(cert config.CertificateConfig, force bool, log *slog.Logger) (bool, int) {
+	if force {
+		log.Info("принудительное обновление", "cert", cert.Name)
+		return true, -1
+	}
+	if len(cert.Domains) == 0 || len(cert.Ports) == 0 {
+		return true, -1
+	}
+	days, err := checker.DaysUntilExpiry(cert.Domains[0], cert.Ports[0], log.With("cert", cert.Name))
+	if err != nil {
+		log.Info("не удалось проверить срок — планирую обновление", "cert", cert.Name)
+		return true, -1
+	}
+	if days <= cert.RenewBeforeDays {
+		log.Info("сертификат скоро истечёт — планирую обновление", "cert", cert.Name,
+			"days_left", days, "threshold", cert.RenewBeforeDays)
+		return true, days
+	}
+	return false, days
 }
 
 func deploy(cert config.CertificateConfig, res *acme.Result, log *slog.Logger) error {

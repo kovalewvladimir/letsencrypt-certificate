@@ -58,10 +58,11 @@ type DNSConfig struct {
 }
 
 type CertificateConfig struct {
-	Name   string
-	Domains []string
-	Ports  []int
-	Deploy DeployConfig
+	Name            string
+	Domains         []string
+	Ports           []int
+	Deploy          DeployConfig
+	RenewBeforeDays int
 }
 
 type DeployConfig struct {
@@ -160,6 +161,13 @@ func Load(path string) (*Config, error) {
 			ports = append(ports, p)
 		}
 
+		renewBeforeDays := 30
+		if v := kv["renew_before_days"]; v != "" {
+			if n, err := strconv.Atoi(v); err == nil {
+				renewBeforeDays = n
+			}
+		}
+
 		deploy := DeployConfig{
 			Type:             kv["deploy_type"],
 			PrivatePath:      kv["private_path"],
@@ -173,10 +181,11 @@ func Load(path string) (*Config, error) {
 		}
 
 		cfg.Certificates = append(cfg.Certificates, CertificateConfig{
-			Name:    name,
-			Domains: splitList(kv["domains"]),
-			Ports:   ports,
-			Deploy:  deploy,
+			Name:            name,
+			Domains:         splitList(kv["domains"]),
+			Ports:           ports,
+			Deploy:          deploy,
+			RenewBeforeDays: renewBeforeDays,
 		})
 	}
 

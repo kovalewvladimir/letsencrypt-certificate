@@ -65,33 +65,39 @@ check_max_attempts = 30
 # ---------- Сертификаты ----------
 # Для каждого сертификата создайте блок [certificate "имя"]
 # deploy_type: local | ssh
+#
+# renew_before_days: обновить сертификат, если до истечения осталось не более N дней.
+# По умолчанию: 30. Программу рекомендуется запускать ежедневно по cron.
 
 [certificate "web-server"]
-domains        = example.ru
-ports          = 443
-deploy_type    = local
-private_path   = /etc/apache2/ssl/private.pem
-fullchain_path = /etc/apache2/ssl/fullchain.pem
-commands       = sudo systemctl restart apache2
+domains           = example.ru
+ports             = 443
+deploy_type       = local
+private_path      = /etc/apache2/ssl/private.pem
+fullchain_path    = /etc/apache2/ssl/fullchain.pem
+commands          = sudo systemctl restart apache2
+# renew_before_days = 30
 
 [certificate "nginx-remote"]
-domains        = www.example.ru, example.ru
-ports          = 443
-deploy_type    = ssh
-ssh_host       = 10.0.0.1
-ssh_username   = admin
-ssh_key_path   = keys/id_rsa
+domains            = www.example.ru, example.ru
+ports              = 443
+deploy_type        = ssh
+ssh_host           = 10.0.0.1
+ssh_username       = admin
+ssh_key_path       = keys/id_rsa
 ssh_private_path   = /etc/nginx/ssl/private.pem
 ssh_fullchain_path = /etc/nginx/ssl/fullchain.pem
-commands       = killall nginx, nginx
+commands           = killall nginx, nginx
+# renew_before_days = 30
 
 [certificate "mail"]
-domains        = mail.example.ru
-ports          = 465, 993
-deploy_type    = ssh
-ssh_host       = 10.0.0.2
-ssh_username   = admin
-ssh_key_path   = keys/id_rsa_mail
+domains            = mail.example.ru
+ports              = 465, 993
+deploy_type        = ssh
+ssh_host           = 10.0.0.2
+ssh_username       = admin
+ssh_key_path       = keys/id_rsa_mail
 ssh_private_path   = /etc/postfix/ssl/private.pem
 ssh_fullchain_path = /etc/postfix/ssl/fullchain.pem
-commands       = sudo systemctl restart postfix, sudo systemctl restart dovecot
+commands           = sudo systemctl restart postfix, sudo systemctl restart dovecot
+# renew_before_days = 30

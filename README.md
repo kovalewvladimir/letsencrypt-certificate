@@ -40,6 +40,27 @@ cp config.ini.example config.ini
 directory_url = https://acme-staging-v02.api.letsencrypt.org/directory
 ```
 
+## Логика обновления
+
+Программа запускается ежедневно (по cron) и проверяет срок действия каждого сертификата.
+Обновление выполняется только если до истечения осталось не более `renew_before_days` дней (по умолчанию 30).
+Если все сертификаты актуальны — уведомление отправляется без обращения к NIC.RU и Let's Encrypt.
+
+## Флаги
+
+| Флаг | Описание |
+|---|---|
+| `--config path` | Путь к файлу конфигурации (по умолчанию `config.ini`) |
+| `--debug` | Включить подробное логирование |
+| `--list` | Показать имена всех сертификатов и выйти |
+| `--certs name1,name2` | Обработать только указанные сертификаты |
+| `--force` | Принудительно обновить, игнорируя срок истечения |
+
+Комбинации:
+- Ежедневный cron — без флагов: `./letsencrypt-certificate --config config.ini`
+- Ручной перевыпуск конкретного сертификата: `./letsencrypt-certificate --config config.ini --certs example.com --force`
+- Принудительное обновление всех: `./letsencrypt-certificate --config config.ini --force`
+
 ## Сборка и запуск
 
 ```bash

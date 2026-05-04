@@ -28,6 +28,8 @@ type certResult struct {
 func main() {
 	configPath := flag.String("config", "config.ini", "path to config.ini")
 	debug := flag.Bool("debug", false, "включить уровень логирования DEBUG")
+	list := flag.Bool("list", false, "показать имена всех сконфигурированных сертификатов и выйти")
+	certs := flag.String("certs", "", "запустить только указанные сертификаты (через запятую, например: example.com,test.org)")
 	flag.Parse()
 
 	logFileName := time.Now().Format("2006-01-02_15-04-05") + ".log"
@@ -45,6 +47,38 @@ func main() {
 	// Reinitialize logger with file output if configured.
 	log = buildLogger(cfg.LogDir, logFileName, *debug, cfg.HTTPLog)
 	log.Info("letsencrypt-certificate запущен", "config", *configPath)
+
+	// --- -list flag ---
+	if *list {
+		for _, c := range cfg.Certificates {
+			fmt.Println(c.Name)
+		}
+		os.Exit(0)
+	}
+
+	// --- -certs flag ---
+	if *certs != "" {
+		names := strings.Split(*certs, ",")
+		byName := make(map[string]config.CertificateConfig, len(cfg.Certificates))
+		for _, c := range cfg.Certificates {
+			byName[c.Name] = c
+		}
+		var unknown []string
+		for _, n := range names {
+			if _, ok := byName[n]; !ok {
+				unknown = append(unknown, n)
+			}
+		}
+		if len(unknown) > 0 {
+			log.Error("неизвестные сертификаты", "names", strings.Join(unknown, ", "))
+			os.Exit(1)
+		}
+		filtered := make([]config.CertificateConfig, 0, len(names))
+		for _, n := range names {
+			filtered = append(filtered, byName[n])
+		}
+		cfg.Certificates = filtered
+	}
 
 	// --- Notifiers ---
 	notifiers := notifier.NewFromConfig(cfg.Notifiers, log)

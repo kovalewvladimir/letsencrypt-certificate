@@ -20,7 +20,7 @@ type zoneData struct {
 
 // rrEntry represents a single DNS resource record returned by the API.
 type rrEntry struct {
-	ID   int    `xml:"id"`
+	ID   int    `xml:"id,attr"`
 	Name string `xml:"name"`
 	TTL  int    `xml:"ttl"`
 	Type string `xml:"type"`
@@ -34,10 +34,14 @@ type addRecordRequest struct {
 }
 
 type txtRR struct {
-	Name string `xml:"name"`
-	TTL  int    `xml:"ttl"`
-	Type string `xml:"type"`
-	TXT  string `xml:"txt"`
+	Name string    `xml:"name"`
+	TTL  int       `xml:"ttl"`
+	Type string    `xml:"type"`
+	TXT  txtString `xml:"txt"`
+}
+
+type txtString struct {
+	Value string `xml:"string"`
 }
 
 // oauthTokenResponse is the JSON body from NIC.RU OAuth endpoint.

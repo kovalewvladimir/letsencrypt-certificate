@@ -152,7 +152,7 @@ func (c *Client) GetRecords(service, zone string) ([]rrEntry, error) {
 // AddTXTRecord creates a TXT record in the given service/zone.
 func (c *Client) AddTXTRecord(service, zone, name, value string, ttl int) error {
 	req := addRecordRequest{
-		RRList: []txtRR{{Name: name, TTL: ttl, Type: "TXT", TXT: value}},
+		RRList: []txtRR{{Name: name, TTL: ttl, Type: "TXT", TXT: txtString{Value: value}}},
 	}
 	xmlBody, err := xml.Marshal(req)
 	if err != nil {

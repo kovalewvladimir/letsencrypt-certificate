@@ -27,10 +27,11 @@ type certResult struct {
 
 func main() {
 	configPath := flag.String("config", "config.ini", "path to config.ini")
+	debug := flag.Bool("debug", false, "включить уровень логирования DEBUG")
 	flag.Parse()
 
 	// --- Logger ---
-	log := buildLogger("")
+	log := buildLogger("", *debug)
 
 	// --- Config ---
 	cfg, err := config.Load(*configPath)
@@ -40,7 +41,7 @@ func main() {
 	}
 
 	// Reinitialize logger with file output if configured.
-	log = buildLogger(cfg.LogFile)
+	log = buildLogger(cfg.LogFile, *debug)
 	log.Info("letsencrypt-certificate запущен", "config", *configPath)
 
 	// --- Notifiers ---
@@ -63,7 +64,7 @@ func main() {
 	}
 
 	waitTXT := func(domain, value string) error {
-		nsIPs, err := dns.GetNameserverIPs(domain)
+		nsIPs, err := dns.GetNameserverIPs(domain, log)
 		if err != nil {
 			return err
 		}
@@ -181,10 +182,12 @@ func buildACMEName(domain, rootDomain string) string {
 	return "_acme-challenge." + sub
 }
 
-func buildLogger(logFile string) *slog.Logger {
-	var writers []slog.Handler
-	stderr := slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelInfo})
-	_ = writers
+func buildLogger(logFile string, debug bool) *slog.Logger {
+	level := slog.LevelInfo
+	if debug {
+		level = slog.LevelDebug
+	}
+	stderr := slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: level})
 	if logFile == "" {
 		return slog.New(stderr)
 	}
@@ -192,9 +195,8 @@ func buildLogger(logFile string) *slog.Logger {
 	if err != nil {
 		return slog.New(stderr)
 	}
-	// Write to both stderr and file using a multi-writer via tee.
 	return slog.New(newMultiHandler(stderr,
-		slog.NewTextHandler(f, &slog.HandlerOptions{Level: slog.LevelInfo})))
+		slog.NewTextHandler(f, &slog.HandlerOptions{Level: level})))
 }
 
 func fatalf(notifiers []notifier.Notifier, log *slog.Logger, format string, args ...any) {

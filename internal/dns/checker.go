@@ -11,7 +11,7 @@ import (
 
 // GetNameserverIPs resolves authoritative NS servers for domain to IP addresses.
 // If the domain has no NS records it strips one label and tries the parent.
-func GetNameserverIPs(domain string) ([]string, error) {
+func GetNameserverIPs(domain string, log *slog.Logger) ([]string, error) {
 	for {
 		nss, err := net.LookupNS(domain)
 		if err != nil {
@@ -24,6 +24,12 @@ func GetNameserverIPs(domain string) ([]string, error) {
 			continue
 		}
 
+		nsHosts := make([]string, len(nss))
+		for i, ns := range nss {
+			nsHosts[i] = ns.Host
+		}
+		log.Debug("dns: найдены NS-серверы", "domain", domain, "ns", nsHosts)
+
 		var ips []string
 		for _, ns := range nss {
 			addrs, err := net.LookupHost(ns.Host)
@@ -35,6 +41,7 @@ func GetNameserverIPs(domain string) ([]string, error) {
 		if len(ips) == 0 {
 			return nil, fmt.Errorf("dns: could not resolve any NS IP for %s", domain)
 		}
+		log.Debug("dns: IP-адреса NS-серверов", "domain", domain, "ips", ips)
 		return ips, nil
 	}
 }

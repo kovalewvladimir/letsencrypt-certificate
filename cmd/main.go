@@ -19,8 +19,6 @@ import (
 	"github.com/kovalewvladimir/letsencrypt-certificate/internal/notifier"
 )
 
-const certStartDelay = 600 * time.Second
-
 type certResult struct {
 	cert config.CertificateConfig
 	res  *acme.Result
@@ -62,7 +60,10 @@ func main() {
 		fatalf(notifiers, log, "ошибка авторизации NIC: %v", err)
 	}
 
+	var nicMu sync.Mutex
 	updateTXT := func(domain, value string) error {
+		nicMu.Lock()
+		defer nicMu.Unlock()
 		name := buildACMEName(domain, cfg.NIC.Domain)
 		return nicClient.UpdateTXTRecord(cfg.NIC.Service, cfg.NIC.Domain, name, value)
 	}
@@ -80,31 +81,25 @@ func main() {
 	results := make(chan certResult, len(cfg.Certificates))
 	var wg sync.WaitGroup
 
-	for i, cert := range cfg.Certificates {
-		if i > 0 {
-			log.Info("ожидание перед запуском следующего сертификата", "delay", certStartDelay)
-			time.Sleep(certStartDelay)
-		}
-
-		wg.Add(1)
-		go func(cert config.CertificateConfig) {
-			defer wg.Done()
-			certLog := log.With("cert", cert.Name)
-			certLog.Info("получение сертификата", "domains", cert.Domains)
-			res, err := acme.ObtainCertificate(
-				cfg.ACME.DirectoryURL,
-				cfg.ACME.Email,
-				cert.Domains,
-				cfg.CertificateFolder,
-				updateTXT,
-				waitTXT,
-				certLog,
-			)
-			results <- certResult{cert: cert, res: res, err: err}
-		}(cert)
-	}
-
 	go func() {
+		for _, cert := range cfg.Certificates {
+			wg.Add(1)
+			go func(cert config.CertificateConfig) {
+				defer wg.Done()
+				certLog := log.With("cert", cert.Name)
+				certLog.Info("получение сертификата", "domains", cert.Domains)
+				res, err := acme.ObtainCertificate(
+					cfg.ACME.DirectoryURL,
+					cfg.ACME.Email,
+					cert.Domains,
+					cfg.CertificateFolder,
+					updateTXT,
+					waitTXT,
+					certLog,
+				)
+				results <- certResult{cert: cert, res: res, err: err}
+			}(cert)
+		}
 		wg.Wait()
 		close(results)
 	}()

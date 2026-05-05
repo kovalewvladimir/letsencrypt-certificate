@@ -30,10 +30,16 @@ jobs:
             exit 1
           fi
 
-      - name: Настроить Go
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
+      - name: Установить зависимости
+        run: apt-get install -y make curl
+
+      - name: Установить Go
+        run: |
+          GO_VERSION=$(grep '^go ' go.mod | awk '{print $2}')
+          curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" -o /tmp/go.tar.gz
+          rm -rf /usr/local/go
+          tar -C /usr/local -xzf /tmp/go.tar.gz
+          echo "/usr/local/go/bin" >> $GITHUB_PATH
 
       - name: Запустить тесты
         run: go test ./...

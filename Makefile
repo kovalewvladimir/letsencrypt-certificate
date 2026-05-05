@@ -11,13 +11,13 @@ help:
 	@echo "  make clean   — удалить бинарник"
 
 build:
-	CGO_ENABLED=0 go build -mod=vendor -o $(BINARY) $(CMD)
+	CGO_ENABLED=0 go build -o $(BINARY) $(CMD)
 
 run:
 	./$(BINARY) --config config.ini
 
 vet:
-	go vet -mod=vendor $(CMD)
+	go vet $(CMD)
 
 clean:
 	rm -f $(BINARY)

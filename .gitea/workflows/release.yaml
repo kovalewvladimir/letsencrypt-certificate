@@ -47,16 +47,21 @@ jobs:
       - name: Создать git-тег
         env:
           VERSION: ${{ inputs.version_number }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git config user.name "gitea-actions[bot]"
-          git config user.email "gitea-actions[bot]@users.noreply.local"
           TAG="v${VERSION}"
-          if git rev-parse "${TAG}" >/dev/null 2>&1; then
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: token ${GITHUB_TOKEN}" \
+            "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/tags/${TAG}")
+          if [ "${STATUS}" = "200" ]; then
             echo "Tag ${TAG} already exists"
             exit 1
           fi
-          git tag -a "${TAG}" -m "Release ${TAG}"
-          git push origin "${TAG}"
+          curl -f -X POST \
+            -H "Authorization: token ${GITHUB_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "{\"tag_name\":\"${TAG}\",\"message\":\"Release ${TAG}\",\"target\":\"${GITHUB_SHA}\"}" \
+            "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/tags"
 
       - name: Собрать бинарник
         run: make build
@@ -90,6 +95,8 @@ jobs:
 
       - name: Создать релиз
         uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: v${{ inputs.version_number }}
           body_path: release_notes.txt

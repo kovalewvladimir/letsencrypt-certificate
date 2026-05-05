@@ -9,8 +9,10 @@ import (
 	"encoding/pem"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	"golang.org/x/crypto/acme"
 )
@@ -51,6 +53,7 @@ func ObtainCertificate(
 	client := &acme.Client{
 		Key:          accountKey,
 		DirectoryURL: directoryURL,
+		HTTPClient:   &http.Client{Timeout: 30 * time.Second},
 	}
 
 	// Register account.

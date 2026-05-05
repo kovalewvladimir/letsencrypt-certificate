@@ -42,7 +42,8 @@ func ObtainCertificate(
 	waitTXT func(domain, value string) error,
 	log *slog.Logger,
 ) (*Result, error) {
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancel()
 
 	// Generate account key.
 	accountKey, err := rsa.GenerateKey(rand.Reader, accountKeyBits)

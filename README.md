@@ -7,15 +7,7 @@
 1. Получает сертификаты от Let's Encrypt по протоколу ACME (DNS-01)
 2. Создаёт TXT-записи в NIC.RU DNS для подтверждения домена
 3. Деплоит сертификаты на серверы — локально или по SSH
-4. Проверяет SSL на всех портах и отправляет отчёт в Telegram
-
-## Установка
-
-```bash
-git clone https://github.com/kovalewvladimir/letsencrypt-certificate
-cd letsencrypt-certificate
-make build
-```
+4. Проверяет SSL на всех портах и отправляет отчёт в Telegram / Max.ru
 
 ## Конфигурация
 
@@ -28,17 +20,38 @@ cp config.ini.example config.ini
 
 | Секция | Что настраивает |
 |---|---|
-| `[log]` | Путь к лог-файлу, папка сертификатов |
-| `[notifier.telegram]` | Токен бота и chat_id |
-| `[acme]` | URL Let's Encrypt, email |
-| `[nic]` | Учётные данные NIC.RU API |
-| `[dns]` | Интервал и лимит проверки TXT-записи |
-| `[certificate "name"]` | Домены, порты, тип деплоя (local/ssh) |
+| `[log]` | Путь к лог-файлу (`folder`), папка сертификатов (`certificate_folder`) |
+| `[log.http]` | Отправка логов по HTTP на удалённый сервер (опционально) |
+| `[notifier.telegram]` | Уведомления через Telegram — токен бота и `recipient` |
+| `[notifier.maxru]` | Уведомления через Max.ru — `access_token` и `chat_id` |
+| `[acme]` | URL Let's Encrypt (`directory_url`), email |
+| `[nic]` | Учётные данные NIC.RU API, `token_file` для кэша токена |
+| `[dns]` | Интервал и лимит проверки TXT-записи, DNS-резолвер |
+| `[certificate "name"]` | Домены, порты, тип деплоя (`local`/`ssh`), `renew_before_days` |
+
+Можно подключить одновременно несколько нотификаторов — каждый из блоков `[notifier.*]` будет использован независимо.
 
 Для тестов используйте staging в `[acme]`:
 ```ini
 directory_url = https://acme-staging-v02.api.letsencrypt.org/directory
 ```
+
+### HTTP-лог (опционально)
+
+Блок `[log.http]` позволяет дублировать каждую строку лога на удалённый HTTP-сервер POST-запросом:
+
+```ini
+[log.http]
+enable      = true
+host        = 192.168.1.100
+port        = 8080
+read_port   = 8080   ; порт для ссылки в уведомлении
+path        = letsencrypt-certificate
+timeout_sec = 10
+```
+
+URL записи: `http://host:port/path/<logFileName>`, тело: `t=<строка>&no_date=true`.
+Если `read_port` не задан, ссылка на лог в уведомлении не выводится.
 
 ## Логика обновления
 
@@ -64,7 +77,7 @@ directory_url = https://acme-staging-v02.api.letsencrypt.org/directory
 ## Сборка и запуск
 
 ```bash
-make build   # статичная сборка бинарника
+make build   # статичная сборка бинарника (CGO_ENABLED=0)
 make run     # запуск с config.ini
 make vet     # проверка go vet
 make clean   # удалить бинарник

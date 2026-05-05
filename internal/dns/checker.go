@@ -81,7 +81,7 @@ func WaitForTXT(domain, value string, nsIPs []string, interval time.Duration, ma
 				continue
 			}
 			if txt == value {
-				log.Info("dns: TXT-запись подтверждена", "ns", nsIP)
+				log.Debug("dns: TXT-запись подтверждена", "ns", nsIP)
 			} else {
 				stillWaiting = append(stillWaiting, nsIP)
 				log.Debug("dns: TXT-запись не совпадает", "ns", nsIP, "got", txt)

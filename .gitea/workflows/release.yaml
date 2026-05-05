@@ -38,30 +38,12 @@ jobs:
       - name: Запустить тесты
         run: go test ./...
 
-      - name: Обновить версию по умолчанию в workflow
-        env:
-          VERSION: ${{ inputs.version_number }}
-        run: |
-          sed -i -E 's/(default:\s*")[^"]+(")/\1'"${VERSION}"'\2/' .gitea/workflows/release.yaml
-
-      - name: Закоммитить обновленную версию по умолчанию
-        env:
-          VERSION: ${{ inputs.version_number }}
-        run: |
-          if git diff --quiet -- .gitea/workflows/release.yaml; then
-            echo "No workflow changes to commit"
-            exit 0
-          fi
-          git config user.name "gitea-actions[bot]"
-          git config user.email "gitea-actions[bot]@users.noreply.local"
-          git add .gitea/workflows/release.yaml
-          git commit -m "Version ${VERSION}"
-          git push
-
       - name: Создать git-тег
         env:
           VERSION: ${{ inputs.version_number }}
         run: |
+          git config user.name "gitea-actions[bot]"
+          git config user.email "gitea-actions[bot]@users.noreply.local"
           TAG="v${VERSION}"
           if git rev-parse "${TAG}" >/dev/null 2>&1; then
             echo "Tag ${TAG} already exists"

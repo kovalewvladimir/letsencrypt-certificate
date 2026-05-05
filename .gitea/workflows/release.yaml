@@ -1,0 +1,109 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_number:
+        description: "Версия без префикса v (example: 0.1.0)"
+        required: true
+        type: string
+        default: "1.0.0"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Получить код
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Проверить версию
+        env:
+          VERSION: ${{ inputs.version_number }}
+        run: |
+          if ! echo "${VERSION}" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "Invalid version format: ${VERSION}. Use X.Y.Z"
+            exit 1
+          fi
+
+      - name: Настроить Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Запустить тесты
+        run: go test ./...
+
+      - name: Обновить версию по умолчанию в workflow
+        env:
+          VERSION: ${{ inputs.version_number }}
+        run: |
+          sed -i -E 's/(default:\s*")[^"]+(")/\1'"${VERSION}"'\2/' .gitea/workflows/release.yaml
+
+      - name: Закоммитить обновленную версию по умолчанию
+        env:
+          VERSION: ${{ inputs.version_number }}
+        run: |
+          if git diff --quiet -- .gitea/workflows/release.yaml; then
+            echo "No workflow changes to commit"
+            exit 0
+          fi
+          git config user.name "gitea-actions[bot]"
+          git config user.email "gitea-actions[bot]@users.noreply.local"
+          git add .gitea/workflows/release.yaml
+          git commit -m "Version ${VERSION}"
+          git push
+
+      - name: Создать git-тег
+        env:
+          VERSION: ${{ inputs.version_number }}
+        run: |
+          TAG="v${VERSION}"
+          if git rev-parse "${TAG}" >/dev/null 2>&1; then
+            echo "Tag ${TAG} already exists"
+            exit 1
+          fi
+          git tag -a "${TAG}" -m "Release ${TAG}"
+          git push origin "${TAG}"
+
+      - name: Собрать бинарник
+        run: make build
+
+      - name: Сгенерировать заметки релиза
+        env:
+          VERSION: ${{ inputs.version_number }}
+          SERVER_URL: ${{ github.server_url }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          TAG="v${VERSION}"
+          PREV_TAG="$(git tag -l "v*" --sort=-v:refname | grep -v "^${TAG}$" | head -n 1 || true)"
+
+          {
+            echo "# ${TAG}"
+            echo
+            if [ -n "${PREV_TAG}" ]; then
+              echo "Changes since ${PREV_TAG}:"
+              echo
+              git log --pretty=format:'- %h %s (%an)' "${PREV_TAG}..HEAD"
+            else
+              echo "Initial release changes:"
+              echo
+              git log --pretty=format:'- %h %s (%an)'
+            fi
+            echo
+            echo
+            echo "Download:"
+            echo "- ${SERVER_URL}/${REPOSITORY}/releases/download/${TAG}/letsencrypt-certificate"
+          } > release_notes.txt
+
+      - name: Создать релиз
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ inputs.version_number }}
+          body_path: release_notes.txt
+          files: |
+            letsencrypt-certificate

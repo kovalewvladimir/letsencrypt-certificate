@@ -4,12 +4,16 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"net"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"golang.org/x/crypto/ssh"
 )
+
+const sshTimeout = 60 * time.Second
 
 // DeploySSH copies certificate files to a remote server via SSH/SCP
 // and runs the given commands over SSH.
@@ -31,12 +35,21 @@ func DeploySSH(
 		User:            username,
 		Auth:            []ssh.AuthMethod{ssh.PublicKeys(signer)},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(), //nolint:gosec
+		Timeout:         sshTimeout,
 	}
 
-	conn, err := ssh.Dial("tcp", host+":22", cfg)
+	netConn, err := net.DialTimeout("tcp", host+":22", sshTimeout)
 	if err != nil {
 		return fmt.Errorf("deployer ssh: dial %s: %w", host, err)
 	}
+	netConn.SetDeadline(time.Now().Add(5 * time.Minute)) //nolint:errcheck
+
+	sshConn, chans, reqs, err := ssh.NewClientConn(netConn, host+":22", cfg)
+	if err != nil {
+		netConn.Close()
+		return fmt.Errorf("deployer ssh: handshake %s: %w", host, err)
+	}
+	conn := ssh.NewClient(sshConn, chans, reqs)
 	defer conn.Close()
 
 	// Upload both files.
@@ -82,8 +95,12 @@ func scpUpload(conn *ssh.Client, localPath, remotePath string, log *slog.Logger)
 	}
 	defer session.Close()
 
-	// Pipe to scp stdin.
 	w, err := session.StdinPipe()
+	if err != nil {
+		return err
+	}
+
+	r, err := session.StdoutPipe()
 	if err != nil {
 		return err
 	}
@@ -92,15 +109,26 @@ func scpUpload(conn *ssh.Client, localPath, remotePath string, log *slog.Logger)
 		return err
 	}
 
-	// SCP protocol: header then data then NUL.
+	// SCP sink protocol requires reading a \x00 ack after each step.
+	if err := scpReadAck(r, "ready"); err != nil {
+		return err
+	}
+
 	header := fmt.Sprintf("C0644 %d %s\n", info.Size(), filepath.Base(remotePath))
 	if _, err := fmt.Fprint(w, header); err != nil {
 		return err
 	}
+	if err := scpReadAck(r, "header"); err != nil {
+		return err
+	}
+
 	if _, err := io.Copy(w, f); err != nil {
 		return err
 	}
 	if _, err := fmt.Fprint(w, "\x00"); err != nil {
+		return err
+	}
+	if err := scpReadAck(r, "data"); err != nil {
 		return err
 	}
 	w.Close()
@@ -110,6 +138,30 @@ func scpUpload(conn *ssh.Client, localPath, remotePath string, log *slog.Logger)
 	}
 	log.Info("deployer ssh: файл загружен", "local", localPath, "remote", remotePath)
 	return nil
+}
+
+// scpReadAck reads one SCP ack byte; on error reads the message line that follows.
+func scpReadAck(r io.Reader, step string) error {
+	b := make([]byte, 1)
+	if _, err := io.ReadFull(r, b); err != nil {
+		return fmt.Errorf("scp %s ack: %w", step, err)
+	}
+	if b[0] == 0 {
+		return nil
+	}
+	// bytes 1 (warning) and 2 (fatal) are followed by a message ending in \n
+	var msg []byte
+	buf := make([]byte, 1)
+	for len(msg) < 512 {
+		if _, err := r.Read(buf); err != nil {
+			break
+		}
+		if buf[0] == '\n' {
+			break
+		}
+		msg = append(msg, buf[0])
+	}
+	return fmt.Errorf("scp %s ack: remote error: %s", step, strings.TrimSpace(string(msg)))
 }
 
 // sshRun executes a single command and returns combined stdout+stderr.
